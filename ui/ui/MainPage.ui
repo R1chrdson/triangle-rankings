@@ -347,6 +347,9 @@
       <pointsize>14</pointsize>
      </font>
     </property>
+    <property name="sizeAdjustPolicy">
+     <enum>QAbstractScrollArea::AdjustToContents</enum>
+    </property>
     <property name="dragDropOverwriteMode">
      <bool>true</bool>
     </property>
@@ -477,6 +480,8 @@
   <tabstop>size_edit</tabstop>
   <tabstop>generate_button</tabstop>
  </tabstops>
- <resources/>
+ <resources>
+  <include location="../../resoruces.qrc"/>
+ </resources>
  <connections/>
 </ui>

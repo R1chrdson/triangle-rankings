@@ -1,10 +1,23 @@
 import sys
+import os
 from PyQt5 import uic
 from PyQt5.QtWidgets import QApplication, QMainWindow, QMessageBox, QSizePolicy, QHeaderView, QTableView
 from PyQt5.QtGui import QIntValidator, QRegExpValidator
 from PyQt5.QtCore import QRegExp, QAbstractTableModel, Qt, QVariant
 from triangle import triangular, metric
 import numpy as np
+
+
+# Define function to import external files when using PyInstaller.
+def resource_path(relative_path):
+    """ Get absolute path to resource, works for dev and for PyInstaller """
+    try:
+        # PyInstaller creates a temp folder and stores path in _MEIPASS
+        base_path = sys._MEIPASS
+    except Exception:
+        base_path = os.path.abspath(".")
+
+    return os.path.join(base_path, relative_path)
 
 
 class PandasModel(QAbstractTableModel):
@@ -42,9 +55,9 @@ def get_float(string):
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
+        self.flag = True
 
-        uic.loadUi('ui/ui/MainPage.ui', self)
-        # self.table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
+        uic.loadUi(resource_path('ui/ui/MainPage.ui'), self)
         self.table.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Minimum)
         self.generate_button.clicked.connect(self.generate)
 
@@ -71,11 +84,12 @@ class MainWindow(QMainWindow):
             model = PandasModel(df)
             self.table.setModel(model)
             non_zero_prev = self.prev != 0
-            print(non_zero_prev)
+
             if (((current[non_zero_prev] / self.prev[non_zero_prev]) >= 10).any() or
                 ((current[non_zero_prev] / self.prev[non_zero_prev]) <= 0.1).any() or
                 self.flag):
                 self.table.resizeColumnsToContents()
+                self.flag = False
             self.prev = current
 
             self.metric_value_result.setText(str(metric_value))
