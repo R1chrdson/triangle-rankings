@@ -106,7 +106,7 @@ class MainWindow(QMainWindow):
 if __name__ == "__main__":
     app = QApplication(sys.argv)
     window = MainWindow()
-    window.setWindowTitle("Ranking Generator")
+    window.setWindowTitle("Rankings Generator")
     window.setFixedSize(767, 655)
     window.show()
     sys.exit(app.exec_())
