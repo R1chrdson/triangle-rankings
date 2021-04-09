@@ -7,7 +7,7 @@ a = Analysis(['main.py'],
              pathex=['D:\\Dev\\triangle-rankings'],
              binaries=[],
              datas=[('ui/ui/MainPage.ui', 'ui/ui/')],
-             hiddenimports=[],
+             hiddenimports=['pkg_resources.py2_warn'],
              hookspath=[],
              runtime_hooks=[],
              excludes=['scipy', 'matplotlib'],
@@ -15,8 +15,10 @@ a = Analysis(['main.py'],
              win_private_assemblies=False,
              cipher=block_cipher,
              noarchive=False)
+
 pyz = PYZ(a.pure, a.zipped_data,
              cipher=block_cipher)
+
 exe = EXE(pyz,
           a.scripts,
           a.binaries,
