@@ -7,7 +7,7 @@ class PandasModel(QAbstractTableModel):
         self._data = data
 
     def rowCount(self, parent=None):
-        return min(len(self._data.values), 10)  # Suppress output and return first 10 rows
+        return min(len(self._data.values), 11)  # Suppress output and return first 10 rows
 
     def columnCount(self, parent=None):
         return self._data.columns.size
@@ -15,6 +15,8 @@ class PandasModel(QAbstractTableModel):
     def data(self, index, role=Qt.DisplayRole):
         if index.isValid():
             if role == Qt.DisplayRole:
+                if index.row() >= 10:
+                    return QVariant('...')
                 return QVariant(str(self._data.iloc[index.row()][index.column()]))
         return QVariant()
 
