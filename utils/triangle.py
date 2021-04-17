@@ -32,13 +32,8 @@ def triangular(a, b, m, size):
 
 
 def metric(r1, r2):
-    if sum(r1) == 0:
-        raise ValueError('Sum of R1 is zero.\nCan\'t be normed')
-    if sum(r2) == 0:
-        raise ValueError('Sum of R2 is zero.\nCan\'t be normed')
-
-    r1_normed = r1 / sum(r1)
-    r2_normed = r2 / sum(r2)
+    r1_normed = r1 / sum(r1) if sum(r1) else 1 / len(r1)
+    r2_normed = r2 / sum(r2) if sum(r2) else 1 / len(r2)
     diff = np.absolute(r1_normed - r2_normed)
     metric = diff.sum()
 
