@@ -64,7 +64,7 @@ class ManualRankingWindow(QWidget):
 
     def update_size(self, size):
         self.size = size
-        for i in range(0, size):
+        for i in range(size):
             self.layout.itemAt(i).widget().show()
 
         for i in range(size, self.max_alternatives):

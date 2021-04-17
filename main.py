@@ -3,7 +3,7 @@ import numpy as np
 from PyQt5 import uic
 from PyQt5.QtWidgets import QApplication, QMainWindow, QMessageBox, QSizePolicy
 from PyQt5.QtGui import QIntValidator, QRegExpValidator
-from PyQt5.QtCore import QRegExp
+from PyQt5.QtCore import QRegExp, QTimer
 from utils.triangle import triangular, metric
 from utils.pandas_table import PandasModel
 from utils.set_ranking_window import ManualRankingWindow
@@ -29,8 +29,8 @@ class MainWindow(QMainWindow):
         self.r2_automatic.toggled.connect(lambda state: change_visibility([self.a2_label, self.a2_edit,
                                                                            self.b2_label, self.b2_edit,
                                                                            self.m2_label, self.m2_edit], state))
-        self.r1_manual.toggled.connect(lambda state: self.toggle_ranking_window(self.set_r1_button, state))
-        self.r2_manual.toggled.connect(lambda state: self.toggle_ranking_window(self.set_r2_button, state))
+        self.r1_manual.toggled.connect(lambda state: change_visibility([self.set_r1_button], state))
+        self.r2_manual.toggled.connect(lambda state: change_visibility([self.set_r2_button], state))
         self.set_r1_button.clicked.connect(lambda: self.show_ranking_window(self.set_r1_window))
         self.set_r2_button.clicked.connect(lambda: self.show_ranking_window(self.set_r2_window))
 
@@ -42,25 +42,22 @@ class MainWindow(QMainWindow):
         float_edits = [self.a1_edit, self.b1_edit, self.m1_edit,
                        self.a2_edit, self.b2_edit, self.m2_edit]
 
-        self.prev = np.array([float(edit.text()) for edit in float_edits])
         for edit in float_edits:
             edit.setValidator(QRegExpValidator(QRegExp(r'-?[0-9]{5}[.|,][0-9]{5}')))
 
         self.size_edit.setValidator(QIntValidator(2, 1000000))
         self.size_edit.editingFinished.connect(self.update_size)
 
-    def toggle_ranking_window(self, window, state):
-        change_visibility([window], state)
-        if state:
-            self.update_size()
-
     def show_ranking_window(self, window):
         self.update_size()
         window.show()
 
     def update_size(self):
+        if not (self.r1_manual.isChecked() or self.r2_manual.isChecked()) or self.size_edit.hasFocus():
+            return
+
         size = int(self.size_edit.text())
-        if (self.r1_manual.isChecked() or self.r2_manual.isChecked()) and size > 10:
+        if size > 10:
             raise ValueError("In manual mode, size can't be > 10")
 
         self.set_r1_window.update_size(size)
@@ -71,28 +68,35 @@ class MainWindow(QMainWindow):
         self.set_r2_window.close()
 
     def generate(self):
+        self.update_size()
         size = int(self.size_edit.text())
         if size < 2:
             raise ValueError("Size should be > 1")
 
-        a1, b1, m1 = get_float(self.a1_edit.text()), get_float(self.b1_edit.text()), get_float(self.m1_edit.text())
-        a2, b2, m2 = get_float(self.a2_edit.text()), get_float(self.b2_edit.text()), get_float(self.m2_edit.text())
-        r1 = triangular(a1, b1, m1, size)
-        r2 = triangular(a2, b2, m2, size)
-        current = np.array([a1, b1, m1, a2, b2, m2])
+        if self.r1_manual.isChecked():
+            r1 = np.array([slider.value() for slider in self.set_r1_window.sliders[:size]])
+        else:
+            a1, b1, m1 = get_float(self.a1_edit.text()), get_float(self.b1_edit.text()), get_float(self.m1_edit.text())
+            r1 = triangular(a1, b1, m1, size)
+
+        if self.r2_manual.isChecked():
+            r2 = np.array([slider.value() for slider in self.set_r2_window.sliders[:size]])
+        else:
+            a2, b2, m2 = get_float(self.a2_edit.text()), get_float(self.b2_edit.text()), get_float(self.m2_edit.text())
+            r2 = triangular(a2, b2, m2, size)
 
         df, metric_value, metric_rank = metric(r1, r2)
 
         model = PandasModel(df)
         self.table.setModel(model)
-        non_zero_prev = self.prev != 0
+        # non_zero_prev = self.prev != 0
 
-        if (((current[non_zero_prev] / self.prev[non_zero_prev]) >= 10).any() or
-            ((current[non_zero_prev] / self.prev[non_zero_prev]) <= 0.1).any() or
-            self.flag):
-            self.table.resizeColumnsToContents()
-            self.flag = False
-        self.prev = current
+        # if (((current[non_zero_prev] / self.prev[non_zero_prev]) >= 10).any() or
+        #     ((current[non_zero_prev] / self.prev[non_zero_prev]) <= 0.1).any() or
+        #     self.flag):
+        #     self.table.resizeColumnsToContents()
+        #     self.flag = False
+        # self.prev = current
 
         self.metric_value_result.setText(str(metric_value))
         self.metric_rank_result.setText(str(metric_rank))
