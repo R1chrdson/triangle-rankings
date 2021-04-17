@@ -83,7 +83,7 @@
      <set>Qt::ImhDigitsOnly</set>
     </property>
     <property name="text">
-     <string>0</string>
+     <string>10</string>
     </property>
    </widget>
    <widget class="QLabel" name="b1_label">
@@ -140,7 +140,7 @@
      <set>Qt::ImhDigitsOnly</set>
     </property>
     <property name="text">
-     <string>0</string>
+     <string>5</string>
     </property>
    </widget>
    <widget class="QLineEdit" name="size_edit">
@@ -161,7 +161,7 @@
      <set>Qt::ImhDigitsOnly</set>
     </property>
     <property name="text">
-     <string>0</string>
+     <string>10</string>
     </property>
    </widget>
    <widget class="QLabel" name="size_label">
@@ -218,7 +218,7 @@
      <set>Qt::ImhDigitsOnly</set>
     </property>
     <property name="text">
-     <string>0</string>
+     <string>5</string>
     </property>
    </widget>
    <widget class="QLineEdit" name="b2_edit">
@@ -239,7 +239,7 @@
      <set>Qt::ImhDigitsOnly</set>
     </property>
     <property name="text">
-     <string>0</string>
+     <string>10</string>
     </property>
    </widget>
    <widget class="QLineEdit" name="a2_edit">
