@@ -4,9 +4,9 @@ import pandas as pd
 from PyQt5 import uic
 from PyQt5.QtWidgets import QApplication, QMainWindow, QMessageBox, QSizePolicy
 from PyQt5.QtGui import QIntValidator, QRegExpValidator
-from PyQt5.QtCore import QRegExp
+from PyQt5.QtCore import QRegExp, QThread, QObject, pyqtSignal
 from utils.triangle import triangular, get_diff_ranks
-from utils.pandas_table import PandasModel
+from utils.pandas_table import PandasMainTableModel
 from utils.set_ranking_window import ManualRankingWindow
 from utils.helpers import get_float, change_visibility, get_normed
 from utils.difference_search import difference_search
@@ -47,7 +47,7 @@ class MainWindow(QMainWindow):
         for edit in float_edits:
             edit.setValidator(QRegExpValidator(QRegExp(r'-?[0-9]{5}[.|,][0-9]{5}')))
 
-        self.size_edit.setValidator(QIntValidator(2, 1000000))
+        self.size_edit.setValidator(QIntValidator(2, 1000))
         self.size_edit.editingFinished.connect(self.update_size)
 
     def show_ranking_window(self, window):
@@ -115,7 +115,7 @@ class MainWindow(QMainWindow):
         df['R2'] = df['R2'].map(lambda x: '{0:5.2f}'.format(x))
         df['R1_n*'] = df['R1_n*'].map(lambda x: '{0:5.4f}'.format(x))
         df['R2_n*'] = df['R2_n*'].map(lambda x: '{0:5.4f}'.format(x))
-        model = PandasModel(df)
+        model = PandasMainTableModel(df)
         self.table.setModel(model)
         self.table.resizeColumnsToContents()
 
@@ -139,6 +139,6 @@ if __name__ == "__main__":
     app = QApplication(sys.argv)
     window = MainWindow()
     window.setWindowTitle("Rankings Generator")
-    window.setFixedSize(770, 730)
+    window.setFixedSize(770, 770)
     window.show()
     sys.exit(app.exec_())

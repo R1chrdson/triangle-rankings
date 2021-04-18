@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>770</width>
-    <height>730</height>
+    <height>770</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -372,8 +372,8 @@
    <widget class="QLabel" name="metric_value_label">
     <property name="geometry">
      <rect>
-      <x>20</x>
-      <y>640</y>
+      <x>70</x>
+      <y>630</y>
       <width>161</width>
       <height>31</height>
      </rect>
@@ -390,8 +390,8 @@
    <widget class="QLabel" name="metric_rank_label">
     <property name="geometry">
      <rect>
-      <x>20</x>
-      <y>680</y>
+      <x>410</x>
+      <y>630</y>
       <width>161</width>
       <height>31</height>
      </rect>
@@ -408,8 +408,8 @@
    <widget class="QLineEdit" name="metric_value_result">
     <property name="geometry">
      <rect>
-      <x>190</x>
-      <y>640</y>
+      <x>240</x>
+      <y>630</y>
       <width>131</width>
       <height>31</height>
      </rect>
@@ -432,8 +432,8 @@
    <widget class="QLineEdit" name="metric_rank_result">
     <property name="geometry">
      <rect>
-      <x>190</x>
-      <y>680</y>
+      <x>580</x>
+      <y>630</y>
       <width>131</width>
       <height>31</height>
      </rect>
@@ -697,12 +697,12 @@
      <string>Set R2 ranking</string>
     </property>
    </widget>
-   <widget class="QPushButton" name="show_r1_adv_calc">
+   <widget class="QPushButton" name="r1_diff_matrix_button">
     <property name="geometry">
      <rect>
-      <x>340</x>
-      <y>630</y>
-      <width>411</width>
+      <x>50</x>
+      <y>670</y>
+      <width>151</width>
       <height>41</height>
      </rect>
     </property>
@@ -715,15 +715,15 @@
      <cursorShape>PointingHandCursor</cursorShape>
     </property>
     <property name="text">
-     <string>Show R1 advantages matrix calculation</string>
+     <string>R1 diff matrix</string>
     </property>
    </widget>
-   <widget class="QPushButton" name="show_r2_adv_calc">
+   <widget class="QPushButton" name="r1_adv_matrix_button">
     <property name="geometry">
      <rect>
-      <x>340</x>
-      <y>680</y>
-      <width>411</width>
+      <x>500</x>
+      <y>670</y>
+      <width>231</width>
       <height>41</height>
      </rect>
     </property>
@@ -736,7 +736,91 @@
      <cursorShape>PointingHandCursor</cursorShape>
     </property>
     <property name="text">
-     <string>Show R2 advantages matrix calculation</string>
+     <string>R1 advantages matrix</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="r1_diff_percent_matrix_button">
+    <property name="geometry">
+     <rect>
+      <x>230</x>
+      <y>670</y>
+      <width>241</width>
+      <height>41</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <pointsize>14</pointsize>
+     </font>
+    </property>
+    <property name="cursor">
+     <cursorShape>PointingHandCursor</cursorShape>
+    </property>
+    <property name="text">
+     <string>R1 diff percent matrix</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="r2_adv_matrix_button">
+    <property name="geometry">
+     <rect>
+      <x>500</x>
+      <y>720</y>
+      <width>231</width>
+      <height>41</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <pointsize>14</pointsize>
+     </font>
+    </property>
+    <property name="cursor">
+     <cursorShape>PointingHandCursor</cursorShape>
+    </property>
+    <property name="text">
+     <string>R2 advantages matrix</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="r2_diff_matrix_button">
+    <property name="geometry">
+     <rect>
+      <x>50</x>
+      <y>720</y>
+      <width>151</width>
+      <height>41</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <pointsize>14</pointsize>
+     </font>
+    </property>
+    <property name="cursor">
+     <cursorShape>PointingHandCursor</cursorShape>
+    </property>
+    <property name="text">
+     <string>R2 diff matrix</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="r2_diff_percent_matrix_button">
+    <property name="geometry">
+     <rect>
+      <x>230</x>
+      <y>720</y>
+      <width>241</width>
+      <height>41</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <pointsize>14</pointsize>
+     </font>
+    </property>
+    <property name="cursor">
+     <cursorShape>PointingHandCursor</cursorShape>
+    </property>
+    <property name="text">
+     <string>R2 diff percent matrix</string>
     </property>
    </widget>
   </widget>
