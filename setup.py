@@ -2,7 +2,7 @@ import sys
 from cx_Freeze import setup, Executable
 
 build_exe_options = {
-    'packages': ['pandas', 'pyqt5'],
+    'packages': ['pandas', 'PyQt5'],
     'excludes': ['scipy', 'matplotlib', 'tkinter'],
     'include_files': ['ui/', 'ui/'],
     'include_msvcr': True
