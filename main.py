@@ -4,9 +4,10 @@ import pandas as pd
 from PyQt5 import uic
 from PyQt5.QtWidgets import QApplication, QMainWindow, QMessageBox, QSizePolicy
 from PyQt5.QtGui import QIntValidator, QRegExpValidator
-from PyQt5.QtCore import QRegExp, QThread, QObject, pyqtSignal
+from PyQt5.QtCore import QRegExp
 from utils.triangle import triangular, get_diff_ranks
-from utils.pandas_table import PandasMainTableModel
+from utils.pandas_table import (PandasMainTableModel, RightAlignTableModel,
+                                TableWindow, AdvantagesTableModel)
 from utils.set_ranking_window import ManualRankingWindow
 from utils.helpers import get_float, change_visibility, get_normed
 from utils.difference_search import difference_search
@@ -15,7 +16,7 @@ from utils.difference_search import difference_search
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
-        self.flag = True
+        self.initialized = False
 
         uic.loadUi('ui/ui/MainPage.ui', self)
         self.table.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Minimum)
@@ -23,6 +24,25 @@ class MainWindow(QMainWindow):
         self.set_r2_button.hide()
         self.set_r1_window = ManualRankingWindow(window_title="Set R1 ranking")
         self.set_r2_window = ManualRankingWindow(window_title="Set R2 ranking")
+        self.show_r1_diff_matrix_window = TableWindow("R1 diff matrix")
+        self.show_r2_diff_matrix_window = TableWindow("R2 diff matrix")
+        self.show_r1_diff_percent_matrix_window = TableWindow("R1 diff percent matrix")
+        self.show_r2_diff_percent_matrix_window = TableWindow("R2 diff percent matrix")
+        self.show_r1_adv_matrix_window = TableWindow("R1 adv matrix")
+        self.show_r2_adv_matrix_window = TableWindow("R2 adv matrix")
+
+        self.r1_diff_matrix_button.clicked.connect(self.show_r1_diff_matrix_window.show)
+        self.r2_diff_matrix_button.clicked.connect(self.show_r2_diff_matrix_window.show)
+        self.r1_diff_percent_matrix_button.clicked.connect(self.show_r1_diff_percent_matrix_window.show)
+        self.r2_diff_percent_matrix_button.clicked.connect(self.show_r2_diff_percent_matrix_window.show)
+        self.r1_adv_matrix_button.clicked.connect(self.show_r1_adv_matrix_window.show)
+        self.r2_adv_matrix_button.clicked.connect(self.show_r2_adv_matrix_window.show)
+        self.r1_diff_matrix_button.setEnabled(False)
+        self.r2_diff_matrix_button.setEnabled(False)
+        self.r1_diff_percent_matrix_button.setEnabled(False)
+        self.r2_diff_percent_matrix_button.setEnabled(False)
+        self.r1_adv_matrix_button.setEnabled(False)
+        self.r2_adv_matrix_button.setEnabled(False)
 
         self.generate_button.clicked.connect(self.generate)
         self.r1_automatic.toggled.connect(lambda state: change_visibility([self.a1_label, self.a1_edit,
@@ -68,6 +88,12 @@ class MainWindow(QMainWindow):
     def closeEvent(self, event):
         self.set_r1_window.close()
         self.set_r2_window.close()
+        self.show_r1_diff_matrix_window.close()
+        self.show_r2_diff_matrix_window.close()
+        self.show_r1_diff_percent_matrix_window.close()
+        self.show_r2_diff_percent_matrix_window.close()
+        self.show_r1_adv_matrix_window.close()
+        self.show_r2_adv_matrix_window.close()
 
     def generate(self):
         self.update_size()
@@ -103,8 +129,8 @@ class MainWindow(QMainWindow):
         r1_diff_matrix, r1_diff_percents, r1_advantages_matrix, r1_geo_mean, r1_geo_mean_normed = r1_difference_search
         r2_diff_matrix, r2_diff_percents, r2_advantages_matrix, r2_geo_mean, r2_geo_mean_normed = r2_difference_search
 
-        data = {'R1': r1, 'R2': r2, 'R1_n': r1_normed, 'R1_n*': r1_geo_mean_normed,
-                'R2_n': r2_normed, 'R2_n*': r2_geo_mean_normed,
+        data = {'R1': r1, 'R2': r2, 'R1_n': r1_normed, 'R1_Gn': r1_geo_mean_normed,
+                'R2_n': r2_normed, 'R2_Gn': r2_geo_mean_normed,
                 'D_n': diff, 'R1_r': r1_ranks, 'R2_r': r2_ranks, 'D_r': diff_ranks}
         df = pd.DataFrame(data=data)
         df['R1_n'] = df['R1_n'].map(lambda x: '{0:5.4f}'.format(x))
@@ -113,14 +139,49 @@ class MainWindow(QMainWindow):
         metric_value = '{0:5.4f}'.format(metric)
         df['R1'] = df['R1'].map(lambda x: '{0:5.2f}'.format(x))
         df['R2'] = df['R2'].map(lambda x: '{0:5.2f}'.format(x))
-        df['R1_n*'] = df['R1_n*'].map(lambda x: '{0:5.4f}'.format(x))
-        df['R2_n*'] = df['R2_n*'].map(lambda x: '{0:5.4f}'.format(x))
+        df['R1_Gn'] = df['R1_Gn'].map(lambda x: '{0:5.4f}'.format(x))
+        df['R2_Gn'] = df['R2_Gn'].map(lambda x: '{0:5.4f}'.format(x))
         model = PandasMainTableModel(df)
         self.table.setModel(model)
         self.table.resizeColumnsToContents()
 
+        r1_diff_matrix = r1_diff_matrix.applymap(lambda x: '{0:5.4f}'.format(x))
+        r1_diff_model = RightAlignTableModel(r1_diff_matrix)
+        self.show_r1_diff_matrix_window.setModel(r1_diff_model)
+
+        r2_diff_matrix = r2_diff_matrix.applymap(lambda x: '{0:5.4f}'.format(x))
+        r2_diff_model = RightAlignTableModel(r2_diff_matrix)
+        self.show_r2_diff_matrix_window.setModel(r2_diff_model)
+
+        r1_diff_percent_matrix = r1_diff_percents.applymap(lambda x: '{0:5.4f}'.format(x))
+        r1_diff_percent_model = RightAlignTableModel(r1_diff_percent_matrix)
+        self.show_r1_diff_percent_matrix_window.setModel(r1_diff_percent_model)
+
+        r2_diff_percent_matrix = r2_diff_percents.applymap(lambda x: '{0:5.4f}'.format(x))
+        r2_diff_percent_model = RightAlignTableModel(r2_diff_percent_matrix)
+        self.show_r2_diff_percent_matrix_window.setModel(r2_diff_percent_model)
+
+        r1_adv_matrix = r1_advantages_matrix.applymap(lambda x: '{0:5.2f}'.format(x))
+        r1_adv_matrix['G_mean'] = r1_geo_mean.apply(lambda x: '{0:5.4f}'.format(x))
+        r1_adv_model = AdvantagesTableModel(r1_adv_matrix)
+        self.show_r1_adv_matrix_window.setModel(r1_adv_model)
+
+        r2_adv_matrix = r2_advantages_matrix.applymap(lambda x: '{0:5.2f}'.format(x))
+        r2_adv_matrix['G_mean'] = r2_geo_mean.apply(lambda x: '{0:5.4f}'.format(x))
+        r2_adv_model = AdvantagesTableModel(r2_adv_matrix)
+        self.show_r2_adv_matrix_window.setModel(r2_adv_model)
+
         self.metric_value_result.setText(str(metric_value))
         self.metric_rank_result.setText(str(metric_rank))
+
+        if not self.initialized:
+            self.initialized = True
+            self.r1_diff_matrix_button.setEnabled(True)
+            self.r2_diff_matrix_button.setEnabled(True)
+            self.r1_diff_percent_matrix_button.setEnabled(True)
+            self.r2_diff_percent_matrix_button.setEnabled(True)
+            self.r1_adv_matrix_button.setEnabled(True)
+            self.r2_adv_matrix_button.setEnabled(True)
 
 
 def except_hook(type, value, tback):
