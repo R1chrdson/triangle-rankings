@@ -28,9 +28,9 @@ def advantages_matrix_element(x, p7, q1):
     return 1 / advantages_matrix_positive(abs(x), max_th, q1)
 
 
-def geo_mean(row):
-    a = np.array(row)
-    return a.prod()**(1.0/len(a))
+def geo_mean(iterable):
+    a = np.log(iterable)
+    return np.exp(a.mean())
 
 
 def difference_search_processing(r, p7, q1):
