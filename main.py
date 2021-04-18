@@ -1,13 +1,15 @@
 import sys
 import numpy as np
+import pandas as pd
 from PyQt5 import uic
 from PyQt5.QtWidgets import QApplication, QMainWindow, QMessageBox, QSizePolicy
 from PyQt5.QtGui import QIntValidator, QRegExpValidator
-from PyQt5.QtCore import QRegExp, QTimer
-from utils.triangle import triangular, metric
+from PyQt5.QtCore import QRegExp
+from utils.triangle import triangular, get_diff_ranks
 from utils.pandas_table import PandasModel
 from utils.set_ranking_window import ManualRankingWindow
-from utils.helpers import get_float, change_visibility
+from utils.helpers import get_float, change_visibility, get_normed
+from utils.difference_search import difference_search
 
 
 class MainWindow(QMainWindow):
@@ -70,8 +72,13 @@ class MainWindow(QMainWindow):
     def generate(self):
         self.update_size()
         size = int(self.size_edit.text())
+
         if size < 2:
             raise ValueError("Size should be > 1")
+
+        p7, q1 = get_float(self.p7_edit.text()), get_float(self.q1_edit.text())
+        if p7 + q1 > 1:
+            raise ValueError("p7 + q1 should be <= 1")
 
         if self.r1_manual.isChecked():
             r1 = np.array([slider.value() for slider in self.set_r1_window.sliders[:size]])
@@ -85,18 +92,32 @@ class MainWindow(QMainWindow):
             a2, b2, m2 = get_float(self.a2_edit.text()), get_float(self.b2_edit.text()), get_float(self.m2_edit.text())
             r2 = triangular(a2, b2, m2, size)
 
-        df, metric_value, metric_rank = metric(r1, r2)
+        r1_normed = get_normed(r1)
+        r2_normed = get_normed(r2)
 
+        diff, r1_ranks, r2_ranks, diff_ranks = get_diff_ranks(r1_normed, r2_normed)
+        metric = diff.sum()
+        metric_rank = diff_ranks.sum()
+
+        r1_difference_search, r2_difference_search = difference_search(r1_normed, r2_normed, p7, q1)
+        r1_diff_matrix, r1_diff_percents, r1_advantages_matrix, r1_geo_mean, r1_geo_mean_normed = r1_difference_search
+        r2_diff_matrix, r2_diff_percents, r2_advantages_matrix, r2_geo_mean, r2_geo_mean_normed = r2_difference_search
+
+        data = {'R1': r1, 'R2': r2, 'R1_n': r1_normed, 'R1_n*': r1_geo_mean_normed,
+                'R2_n': r2_normed, 'R2_n*': r2_geo_mean_normed,
+                'D_n': diff, 'R1_r': r1_ranks, 'R2_r': r2_ranks, 'D_r': diff_ranks}
+        df = pd.DataFrame(data=data)
+        df['R1_n'] = df['R1_n'].map(lambda x: '{0:5.4f}'.format(x))
+        df['R2_n'] = df['R2_n'].map(lambda x: '{0:5.4f}'.format(x))
+        df['D_n'] = df['D_n'].map(lambda x: '{0:5.4f}'.format(x))
+        metric_value = '{0:5.4f}'.format(metric)
+        df['R1'] = df['R1'].map(lambda x: '{0:5.2f}'.format(x))
+        df['R2'] = df['R2'].map(lambda x: '{0:5.2f}'.format(x))
+        df['R1_n*'] = df['R1_n*'].map(lambda x: '{0:5.4f}'.format(x))
+        df['R2_n*'] = df['R2_n*'].map(lambda x: '{0:5.4f}'.format(x))
         model = PandasModel(df)
         self.table.setModel(model)
-        # non_zero_prev = self.prev != 0
-
-        # if (((current[non_zero_prev] / self.prev[non_zero_prev]) >= 10).any() or
-        #     ((current[non_zero_prev] / self.prev[non_zero_prev]) <= 0.1).any() or
-        #     self.flag):
-        #     self.table.resizeColumnsToContents()
-        #     self.flag = False
-        # self.prev = current
+        self.table.resizeColumnsToContents()
 
         self.metric_value_result.setText(str(metric_value))
         self.metric_rank_result.setText(str(metric_rank))
@@ -118,6 +139,6 @@ if __name__ == "__main__":
     app = QApplication(sys.argv)
     window = MainWindow()
     window.setWindowTitle("Rankings Generator")
-    window.setFixedSize(770, 710)
+    window.setFixedSize(770, 730)
     window.show()
     sys.exit(app.exec_())
