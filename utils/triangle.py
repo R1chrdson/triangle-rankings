@@ -1,6 +1,28 @@
 import numpy as np
 
 
+def rankify_improved(A):
+    R = [0 for i in range(len(A))]
+    T = [(A[i], i) for i in range(len(A))]
+    T.sort(key=lambda x: x[0])
+    (rank, n, i) = (1, 1, 0)
+
+    while i < len(A):
+        j = i
+
+        while j < len(A) - 1 and T[j][0] == T[j + 1][0]:
+            j += 1
+        n = j - i + 1
+
+        for j in range(n):
+            idx = T[i + j][1]
+            R[idx] = rank + (n - 1) * 0.5
+
+        rank += n
+        i += n
+    return R
+
+
 def rnd():
     return np.random.random()
 
@@ -32,7 +54,8 @@ def triangular(a, b, m, size):
 
 def get_diff_ranks(r1_normed, r2_normed):
     diff = np.absolute(r1_normed - r2_normed)
-    r1_ranks = np.argsort(r1_normed.argsort()[::-1])
-    r2_ranks = np.argsort(r2_normed.argsort()[::-1])
+    r1_ranks = np.array(rankify_improved(r1_normed)) - 1
+    r2_ranks = np.array(rankify_improved(r2_normed)) - 1
+    print(r1_ranks, r2_ranks)
     diff_ranks = np.absolute(r1_ranks - r2_ranks)
     return diff, r1_ranks, r2_ranks, diff_ranks
