@@ -736,7 +736,7 @@
      <cursorShape>PointingHandCursor</cursorShape>
     </property>
     <property name="text">
-     <string>R1 advantages matrix</string>
+     <string>R1 K-matrix</string>
     </property>
    </widget>
    <widget class="QPushButton" name="r1_diff_percent_matrix_button">
@@ -757,7 +757,7 @@
      <cursorShape>PointingHandCursor</cursorShape>
     </property>
     <property name="text">
-     <string>R1 diff percent matrix</string>
+     <string>R1 % matrix</string>
     </property>
    </widget>
    <widget class="QPushButton" name="r2_adv_matrix_button">
@@ -778,7 +778,7 @@
      <cursorShape>PointingHandCursor</cursorShape>
     </property>
     <property name="text">
-     <string>R2 advantages matrix</string>
+     <string>R2 K-matrix</string>
     </property>
    </widget>
    <widget class="QPushButton" name="r2_diff_matrix_button">
@@ -820,7 +820,7 @@
      <cursorShape>PointingHandCursor</cursorShape>
     </property>
     <property name="text">
-     <string>R2 diff percent matrix</string>
+     <string>R2 % matrix</string>
     </property>
    </widget>
   </widget>

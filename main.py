@@ -2,7 +2,7 @@ import sys
 import numpy as np
 import pandas as pd
 from PyQt5 import uic
-from PyQt5.QtWidgets import QApplication, QMainWindow, QMessageBox, QSizePolicy
+from PyQt5.QtWidgets import QApplication, QMainWindow, QMessageBox, QSizePolicy, QHeaderView
 from PyQt5.QtGui import QIntValidator, QRegExpValidator
 from PyQt5.QtCore import QRegExp
 from utils.triangle import triangular, get_diff_ranks
@@ -20,16 +20,17 @@ class MainWindow(QMainWindow):
 
         uic.loadUi('ui/ui/MainPage.ui', self)
         self.table.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Minimum)
+        self.table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
         self.set_r1_button.hide()
         self.set_r2_button.hide()
         self.set_r1_window = ManualRankingWindow(window_title="Set R1 ranking")
         self.set_r2_window = ManualRankingWindow(window_title="Set R2 ranking")
         self.show_r1_diff_matrix_window = TableWindow("R1 diff matrix")
         self.show_r2_diff_matrix_window = TableWindow("R2 diff matrix")
-        self.show_r1_diff_percent_matrix_window = TableWindow("R1 diff percent matrix")
-        self.show_r2_diff_percent_matrix_window = TableWindow("R2 diff percent matrix")
-        self.show_r1_adv_matrix_window = TableWindow("R1 adv matrix")
-        self.show_r2_adv_matrix_window = TableWindow("R2 adv matrix")
+        self.show_r1_diff_percent_matrix_window = TableWindow("R1 % matrix")
+        self.show_r2_diff_percent_matrix_window = TableWindow("R2 % matrix")
+        self.show_r1_adv_matrix_window = TableWindow("R1 K-matrix")
+        self.show_r2_adv_matrix_window = TableWindow("R2 K-matrix")
 
         self.r1_diff_matrix_button.clicked.connect(self.show_r1_diff_matrix_window.show)
         self.r2_diff_matrix_button.clicked.connect(self.show_r2_diff_matrix_window.show)
@@ -107,13 +108,13 @@ class MainWindow(QMainWindow):
             raise ValueError("p7 + q1 should be <= 1")
 
         if self.r1_manual.isChecked():
-            r1 = np.array([slider.value() for slider in self.set_r1_window.sliders[:size]])
+            r1 = np.array([slider.abs_value for slider in self.set_r1_window.sliders[:size]])
         else:
             a1, b1, m1 = get_float(self.a1_edit.text()), get_float(self.b1_edit.text()), get_float(self.m1_edit.text())
             r1 = triangular(a1, b1, m1, size)
 
         if self.r2_manual.isChecked():
-            r2 = np.array([slider.value() for slider in self.set_r2_window.sliders[:size]])
+            r2 = np.array([slider.abs_value for slider in self.set_r2_window.sliders[:size]])
         else:
             a2, b2, m2 = get_float(self.a2_edit.text()), get_float(self.b2_edit.text()), get_float(self.m2_edit.text())
             r2 = triangular(a2, b2, m2, size)
@@ -141,6 +142,9 @@ class MainWindow(QMainWindow):
         df['R2'] = df['R2'].map(lambda x: '{0:5.2f}'.format(x))
         df['R1_Gn'] = df['R1_Gn'].map(lambda x: '{0:5.4f}'.format(x))
         df['R2_Gn'] = df['R2_Gn'].map(lambda x: '{0:5.4f}'.format(x))
+        # df['|'] = ""
+        # model = PandasMainTableModel(df[['R1', 'R2', '|', 'R1_n', 'R1_Gn', '|',
+        #                                  'R2_n', 'R2_Gn', '|', 'D_n', 'R1_r', 'R2_r', 'D_r']])
         model = PandasMainTableModel(df)
         self.table.setModel(model)
         self.table.resizeColumnsToContents()
@@ -172,7 +176,7 @@ class MainWindow(QMainWindow):
         self.show_r2_adv_matrix_window.setModel(r2_adv_model)
 
         self.metric_value_result.setText(str(metric_value))
-        self.metric_rank_result.setText(str(metric_rank))
+        self.metric_rank_result.setText(str(metric_rank / 2))
 
         if not self.initialized:
             self.initialized = True
