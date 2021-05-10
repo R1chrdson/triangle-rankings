@@ -1,7 +1,7 @@
 import numpy as np
-from PyQt5.QtWidgets import QHBoxLayout, QVBoxLayout, QLabel, QWidget, QSlider, QFrame
-from PyQt5.QtCore import Qt, pyqtSignal
-from PyQt5.QtGui import QFont, QResizeEvent
+from PyQt5.QtWidgets import QHBoxLayout, QVBoxLayout, QLabel, QWidget, QSlider, QFrame, QLineEdit
+from PyQt5.QtCore import Qt, pyqtSignal, QRegExp
+from PyQt5.QtGui import QFont, QResizeEvent, QRegExpValidator
 
 
 class CustomSlider(QSlider):
@@ -48,18 +48,23 @@ class CustomSlider(QSlider):
 
 
 class AlternativeLayout(QFrame):
-    def __init__(self, name):
+    text_changed = pyqtSignal(QFrame)
+
+    def __init__(self, i):
         super().__init__()
         font = QFont("MS Shell Dig 2", 14)
         self.layout = QHBoxLayout()
         self.setLayout(self.layout)
 
-        self.label = QLabel(name)
+        self.i = i
+        self.label = QLabel(f'a{i}')
         self.label.setFont(font)
 
-        self.value_label = QLabel()
+        self.value_label = QLineEdit()
+        self.value_label.setValidator(QRegExpValidator(QRegExp(r'0[.|,][0-9]{1,4}|1[.|,]0{1,4}')))
         self.value_label.setFont(font)
-        self.value_label.setFixedWidth(76)
+        self.value_label.setFixedWidth(110)
+        self.value_label.editingFinished.connect(lambda: self.text_changed.emit(self))
 
         self.slider = CustomSlider(Qt.Horizontal)
         self.slider.setFocusPolicy(Qt.NoFocus)
@@ -82,23 +87,60 @@ class ManualRankingWindow(QWidget):
         self.max_alternatives = max_alternatives
         self.create_alternatives()
 
-        self.sliders = [self.layout.itemAt(i).widget().slider for i in range(max_alternatives)]
-        self.value_labels = [self.layout.itemAt(i).widget().value_label for i in range(max_alternatives)]
+        self.alternatives = [self.layout.itemAt(i).widget() for i in range(max_alternatives)]
+        self.sliders = [a.slider for a in self.alternatives]
+        self.value_labels = [a.value_label for a in self.alternatives]
 
         for slider in self.sliders:
             slider.valueChanged.connect(self.update_values)
+
+        for a in self.alternatives:
+            a.text_changed.connect(self.label_text)
+
         self.update_values()
+
+    def label_text(self, alternative):
+        n_v = round(float(alternative.value_label.text()), 4)
+        other_alternatives = self.alternatives[:alternative.i] + self.alternatives[alternative.i + 1:]
+        other_values = np.array([a.slider.abs_value for a in other_alternatives])
+
+        if n_v == 1.0:
+            for a in self.alternatives:
+                a.slider.abs_value = 0
+                a.slider.setValue(0)
+            alternative.slider.abs_value = 1.0
+        else:
+            if np.sum(other_values / n_v):
+                alternative.slider.abs_value = round(np.sum(other_values * n_v) / (1 - n_v), 3)
+            else:
+                pivot = (1 - n_v) / (n_v * (len(self.alternatives) - 1))
+                for a in self.alternatives:
+                    a.slider.abs_value = pivot
+                    a.slider.setValue(a.slider.abs_value * a.slider.width())
+                alternative.slider.abs_value = 1.0
+
+        alternative.slider.setValue(round(alternative.slider.width() * alternative.slider.abs_value))
+
+        if alternative.slider.abs_value > 1.0:
+            pivot = alternative.slider.abs_value
+            for a in self.alternatives:
+                a.slider.abs_value = a.slider.abs_value / pivot
+                a.slider.setValue(a.slider.abs_value * a.slider.width())
+
+        self.update_values()
+
 
     def update_values(self):
         values = np.array([s.abs_value for s in self.sliders[:self.size]])
         sum_values = sum(values)
         normed_values = values / sum_values if sum_values else np.ones(self.size) / self.size
         for i, value in enumerate(normed_values):
-            self.value_labels[i].setText(f'{value:0.4f}')
+            self.value_labels[i].setText(f'{value:.4f}')
+        print(values)
 
     def create_alternatives(self):
         for i in range(self.max_alternatives):
-            self.layout.addWidget(AlternativeLayout(f'a{i}'))
+            self.layout.addWidget(AlternativeLayout(i))
 
     def update_size(self, size):
         self.size = size
