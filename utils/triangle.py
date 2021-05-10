@@ -56,6 +56,5 @@ def get_diff_ranks(r1_normed, r2_normed):
     diff = np.absolute(r1_normed - r2_normed)
     r1_ranks = np.array(rankify_improved(r1_normed)) - 1
     r2_ranks = np.array(rankify_improved(r2_normed)) - 1
-    print(r1_ranks, r2_ranks)
     diff_ranks = np.absolute(r1_ranks - r2_ranks)
     return diff, r1_ranks, r2_ranks, diff_ranks

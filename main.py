@@ -204,6 +204,6 @@ if __name__ == "__main__":
     app = QApplication(sys.argv)
     window = MainWindow()
     window.setWindowTitle("Rankings Generator")
-    window.setFixedSize(770, 770)
+    window.resize(770, 770)
     window.show()
     sys.exit(app.exec_())

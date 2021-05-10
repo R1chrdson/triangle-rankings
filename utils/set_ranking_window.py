@@ -136,7 +136,6 @@ class ManualRankingWindow(QWidget):
         normed_values = values / sum_values if sum_values else np.ones(self.size) / self.size
         for i, value in enumerate(normed_values):
             self.value_labels[i].setText(f'{value:.4f}')
-        print(values)
 
     def create_alternatives(self):
         for i in range(self.max_alternatives):
