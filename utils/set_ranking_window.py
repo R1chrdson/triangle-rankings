@@ -1,8 +1,42 @@
 import numpy as np
-from PyQt5.QtWidgets import QFrame, QHBoxLayout, QVBoxLayout, QLabel, QWidget, QLayout
-from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QFont
-from utils.slider import Slider
+from PyQt5.QtWidgets import QFrame, QHBoxLayout, QVBoxLayout, QLabel, QWidget, QLayout, QSlider
+from PyQt5.QtCore import Qt, pyqtSignal
+from PyQt5.QtGui import QFont, QResizeEvent
+
+
+class CustomSlider(QSlider):
+    resized = pyqtSignal(QResizeEvent)
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.resized.connect(self.some)
+        self.abs_value = .5
+
+    def resizeEvent(self, event):
+        self.resized.emit(event)
+        return super().resizeEvent(event)
+
+    def mousePressEvent(self, e):
+        self.moveByEvent(e)
+
+    def mouseMoveEvent(self, e):
+        self.moveByEvent(e)
+
+    def moveByEvent(self, e):
+        e.accept()
+        x = e.pos().x()
+        value = (self.maximum() - self.minimum()) * x / self.width() + self.minimum()
+        self.abs_value = value / self.width()
+        self.setValue(round(value))
+
+    def some(self, event):
+        old_width, width = event.oldSize().width(), event.size().width()
+        self.setRange(0, width)
+        self.setPageStep(1)
+        if old_width == -1:
+            self.setValue(width / 2)
+        else:
+            self.setValue(width * self.abs_value)
 
 
 class AlternativeLayout(QFrame):
@@ -19,12 +53,8 @@ class AlternativeLayout(QFrame):
         self.value_label.setFont(font)
         self.value_label.setFixedWidth(76)
 
-        self.slider = Slider(Qt.Horizontal)
-        self.slider.setFixedWidth(300)
-        self.slider.setRange(0, 100)
-        self.slider.setPageStep(1)
+        self.slider = CustomSlider(Qt.Horizontal)
         self.slider.setFocusPolicy(Qt.NoFocus)
-        self.slider.setValue(50)
 
         self.layout.addWidget(self.label)
         self.layout.addWidget(self.slider)
@@ -40,7 +70,7 @@ class ManualRankingWindow(QWidget):
         self.size = size
         self.layout = QVBoxLayout()
         self.setLayout(self.layout)
-        self.layout.setSizeConstraint(QLayout.SetFixedSize)
+        self.resize(1000, self.height())
         self.max_alternatives = max_alternatives
         self.create_alternatives()
 
@@ -52,7 +82,7 @@ class ManualRankingWindow(QWidget):
         self.update_values()
 
     def update_values(self):
-        values = np.array([s.value() for s in self.sliders[:self.size]])
+        values = np.array([s.abs_value for s in self.sliders[:self.size]])
         sum_values = sum(values)
         normed_values = values / sum_values if sum_values else np.ones(self.size) / self.size
         for i, value in enumerate(normed_values):
