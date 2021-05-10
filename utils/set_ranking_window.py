@@ -1,5 +1,5 @@
 import numpy as np
-from PyQt5.QtWidgets import QFrame, QHBoxLayout, QVBoxLayout, QLabel, QWidget, QLayout, QSlider
+from PyQt5.QtWidgets import QHBoxLayout, QVBoxLayout, QLabel, QWidget, QSlider, QFrame
 from PyQt5.QtCore import Qt, pyqtSignal
 from PyQt5.QtGui import QFont, QResizeEvent
 
@@ -9,12 +9,13 @@ class CustomSlider(QSlider):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.setTickPosition(QSlider.TicksBelow)
         self.resized.connect(self.some)
         self.abs_value = .5
 
-    def resizeEvent(self, event):
-        self.resized.emit(event)
-        return super().resizeEvent(event)
+    def resizeEvent(self, e):
+        self.resized.emit(e)
+        return super().resizeEvent(e)
 
     def mousePressEvent(self, e):
         self.moveByEvent(e)
@@ -26,13 +27,20 @@ class CustomSlider(QSlider):
         e.accept()
         x = e.pos().x()
         value = (self.maximum() - self.minimum()) * x / self.width() + self.minimum()
-        self.abs_value = value / self.width()
+        self.abs_value = round(value / self.width(), 3)
+
+        if self.abs_value > 1:
+            self.abs_value = 1
+        elif self.abs_value < 0:
+            self.abs_value = 0
+
         self.setValue(round(value))
 
     def some(self, event):
         old_width, width = event.oldSize().width(), event.size().width()
         self.setRange(0, width)
         self.setPageStep(1)
+        self.setTickInterval(width / 2)
         if old_width == -1:
             self.setValue(width / 2)
         else:
