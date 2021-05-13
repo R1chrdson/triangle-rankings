@@ -101,11 +101,11 @@ class ManualRankingWindow(QWidget):
 
     def label_text(self, alternative):
         n_v = round(float(alternative.value_label.text()), 4)
-        other_alternatives = self.alternatives[:alternative.i] + self.alternatives[alternative.i + 1:]
+        other_alternatives = self.alternatives[:alternative.i] + self.alternatives[alternative.i + 1:self.size]
         other_values = np.array([a.slider.abs_value for a in other_alternatives])
 
         if n_v == 1.0:
-            for a in self.alternatives:
+            for a in self.alternatives[:self.size]:
                 a.slider.abs_value = 0
                 a.slider.setValue(0)
             alternative.slider.abs_value = 1.0
@@ -113,8 +113,8 @@ class ManualRankingWindow(QWidget):
             if np.sum(other_values / n_v):
                 alternative.slider.abs_value = round(np.sum(other_values * n_v) / (1 - n_v), 3)
             else:
-                pivot = (1 - n_v) / (n_v * (len(self.alternatives) - 1))
-                for a in self.alternatives:
+                pivot = (1 - n_v) / (n_v * (self.size - 1))
+                for a in self.alternatives[:self.size]:
                     a.slider.abs_value = pivot
                     a.slider.setValue(a.slider.abs_value * a.slider.width())
                 alternative.slider.abs_value = 1.0
@@ -123,12 +123,11 @@ class ManualRankingWindow(QWidget):
 
         if alternative.slider.abs_value > 1.0:
             pivot = alternative.slider.abs_value
-            for a in self.alternatives:
+            for a in self.alternatives[:self.size]:
                 a.slider.abs_value = a.slider.abs_value / pivot
                 a.slider.setValue(a.slider.abs_value * a.slider.width())
 
         self.update_values()
-
 
     def update_values(self):
         values = np.array([s.abs_value for s in self.sliders[:self.size]])

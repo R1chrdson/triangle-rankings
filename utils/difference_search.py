@@ -35,10 +35,7 @@ def geo_mean(iterable):
 
 def difference_search_processing(r, p7, q1):
     r_diff_matrix = r.apply(lambda x: x - r)
-    r_diff_except = np.array(r_diff_matrix)[~np.eye(*r_diff_matrix.shape, dtype=bool)]
-    dr_max = np.abs(r_diff_except).max().max()
-    dr_min = np.abs(r_diff_except).min().min()
-    dr = dr_max - dr_min
+    dr = r_diff_matrix.max().max()
     r_diff_percents = r_diff_matrix.applymap(lambda x: get_percent(x, dr))
     r_advantages_matrix = r_diff_percents.applymap(lambda x: advantages_matrix_element(x, p7, q1))
     r_geo_mean = r_advantages_matrix.apply(geo_mean, axis=1)
