@@ -130,8 +130,8 @@ class MainWindow(QMainWindow):
         r1_diff_matrix, r1_diff_percents, r1_advantages_matrix, r1_geo_mean, r1_geo_mean_normed = r1_difference_search
         r2_diff_matrix, r2_diff_percents, r2_advantages_matrix, r2_geo_mean, r2_geo_mean_normed = r2_difference_search
 
-        data = {'R1': r1, 'R2': r2, 'R1_n': r1_normed, 'R1_Gn': r1_geo_mean_normed,
-                'R2_n': r2_normed, 'R2_Gn': r2_geo_mean_normed,
+        data = {'R1': r1, 'R2': r2, 'R1_n': r1_normed, 'R1_n*': r1_geo_mean_normed,
+                'R2_n': r2_normed, 'R2_n*': r2_geo_mean_normed,
                 'D_n': diff, 'R1_r': r1_ranks, 'R2_r': r2_ranks, 'D_r': diff_ranks}
         df = pd.DataFrame(data=data)
         df['R1_n'] = df['R1_n'].map(lambda x: '{0:5.4f}'.format(x))
@@ -140,11 +140,11 @@ class MainWindow(QMainWindow):
         metric_value = '{0:5.4f}'.format(metric)
         df['R1'] = df['R1'].map(lambda x: '{0:5.2f}'.format(x))
         df['R2'] = df['R2'].map(lambda x: '{0:5.2f}'.format(x))
-        df['R1_Gn'] = df['R1_Gn'].map(lambda x: '{0:5.4f}'.format(x))
-        df['R2_Gn'] = df['R2_Gn'].map(lambda x: '{0:5.4f}'.format(x))
+        df['R1_n*'] = df['R1_n*'].map(lambda x: '{0:5.4f}'.format(x))
+        df['R2_n*'] = df['R2_n*'].map(lambda x: '{0:5.4f}'.format(x))
         # df['|'] = ""
-        # model = PandasMainTableModel(df[['R1', 'R2', '|', 'R1_n', 'R1_Gn', '|',
-        #                                  'R2_n', 'R2_Gn', '|', 'D_n', 'R1_r', 'R2_r', 'D_r']])
+        # model = PandasMainTableModel(df[['R1', 'R2', '|', 'R1_n', 'R1_n*', '|',
+        #                                  'R2_n', 'R2_n*', '|', 'D_n', 'R1_r', 'R2_r', 'D_r']])
         model = PandasMainTableModel(df)
         self.table.setModel(model)
         self.table.resizeColumnsToContents()
