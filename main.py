@@ -8,7 +8,7 @@ from PyQt5.QtCore import QRegExp
 from utils.triangle import triangular, get_diff_ranks
 from utils.pandas_table import (PandasMainTableModel, RightAlignTableModel,
                                 TableWindow, AdvantagesTableModel)
-from utils.set_ranking_window import ManualRankingWindow
+from utils.set_ranking_window import VisualRankingWindow, ManualRankingWindow
 from utils.helpers import get_float, change_visibility, get_normed
 from utils.difference_search import difference_search
 
@@ -23,8 +23,12 @@ class MainWindow(QMainWindow):
         self.table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
         self.set_r1_button.hide()
         self.set_r2_button.hide()
-        self.set_r1_window = ManualRankingWindow(window_title="Set R1 ranking")
-        self.set_r2_window = ManualRankingWindow(window_title="Set R2 ranking")
+        self.set_r1_button_manual.hide()
+        self.set_r2_button_manual.hide()
+        self.set_r1_window = VisualRankingWindow(window_title="Set R1 ranking visual")
+        self.set_r2_window = VisualRankingWindow(window_title="Set R2 ranking visual")
+        self.set_r1_window_manual = ManualRankingWindow(window_title="Set R1 ranking manual")
+        self.set_r2_window_manual = ManualRankingWindow(window_title="Set R2 ranking manual")
         self.show_r1_diff_matrix_window = TableWindow("R1 diff matrix")
         self.show_r2_diff_matrix_window = TableWindow("R2 diff matrix")
         self.show_r1_diff_percent_matrix_window = TableWindow("R1 % matrix")
@@ -52,10 +56,14 @@ class MainWindow(QMainWindow):
         self.r2_automatic.toggled.connect(lambda state: change_visibility([self.a2_label, self.a2_edit,
                                                                            self.b2_label, self.b2_edit,
                                                                            self.m2_label, self.m2_edit], state))
-        self.r1_manual.toggled.connect(lambda state: change_visibility([self.set_r1_button], state))
-        self.r2_manual.toggled.connect(lambda state: change_visibility([self.set_r2_button], state))
+        self.r1_manual.toggled.connect(lambda state: change_visibility([self.set_r1_button, self.set_r1_button_manual],
+                                                                       state))
+        self.r2_manual.toggled.connect(lambda state: change_visibility([self.set_r2_button, self.set_r2_button_manual],
+                                                                       state))
         self.set_r1_button.clicked.connect(lambda: self.show_ranking_window(self.set_r1_window))
         self.set_r2_button.clicked.connect(lambda: self.show_ranking_window(self.set_r2_window))
+        self.set_r1_button_manual.clicked.connect(lambda: self.show_ranking_window(self.set_r1_window_manual))
+        self.set_r2_button_manual.clicked.connect(lambda: self.show_ranking_window(self.set_r2_window_manual))
 
         percent_edits = [self.p7_edit, self.q1_edit]
 
@@ -71,6 +79,37 @@ class MainWindow(QMainWindow):
         self.size_edit.setValidator(QIntValidator(2, 1000))
         self.size_edit.editingFinished.connect(self.update_size)
 
+        self.set_r1_window.values_updated.connect(lambda parent: self.update_manual_values(parent,
+                                                                                           self.set_r1_window_manual))
+        self.set_r2_window.values_updated.connect(lambda parent: self.update_manual_values(parent,
+                                                                                           self.set_r2_window_manual))
+
+        self.set_r1_window_manual.button.clicked.connect(lambda: self.update_visual_values(self.set_r1_window_manual,
+                                                                                                  self.set_r1_window))
+        self.set_r2_window_manual.button.clicked.connect(lambda: self.update_visual_values(self.set_r2_window_manual,
+                                                                                           self.set_r2_window))
+
+    def update_visual_values(self, parent, child):
+        if round(parent.normed_values[:parent.size].sum(), 4) != 1:
+            raise ValueError("Sum of all values should be equal to 1")
+
+        values = (1 / parent.normed_values[:parent.size].max()) * parent.normed_values[:parent.size]
+
+        for i, value in enumerate(values):
+            child.sliders[i].abs_value = value
+            child.sliders[i].setValue(child.sliders[i].abs_value * child.sliders[i].width())
+
+        child.update_values()
+
+
+    def update_manual_values(self, parent, child):
+        values = np.array([s.abs_value for s in parent.sliders[:parent.size]])
+        sum_values = sum(values)
+        normed_values = values / sum_values if sum_values else np.ones(parent.size) / parent.size
+        for i, value in enumerate(normed_values):
+            child.normed_values[i] = value
+            child.alternatives_layout.itemAt(i).widget().value_label.setText(f'{value:0.4f}')
+
     def show_ranking_window(self, window):
         self.update_size()
         window.show()
@@ -85,10 +124,14 @@ class MainWindow(QMainWindow):
 
         self.set_r1_window.update_size(size)
         self.set_r2_window.update_size(size)
+        self.set_r1_window_manual.update_size(size)
+        self.set_r2_window_manual.update_size(size)
 
     def closeEvent(self, event):
         self.set_r1_window.close()
         self.set_r2_window.close()
+        self.set_r1_window_manual.close()
+        self.set_r2_window_manual.close()
         self.show_r1_diff_matrix_window.close()
         self.show_r2_diff_matrix_window.close()
         self.show_r1_diff_percent_matrix_window.close()

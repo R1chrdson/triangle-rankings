@@ -1,7 +1,9 @@
 import numpy as np
-from PyQt5.QtWidgets import QHBoxLayout, QVBoxLayout, QLabel, QWidget, QSlider, QFrame, QLineEdit
+from PyQt5.QtWidgets import (QHBoxLayout, QVBoxLayout, QLabel, QPushButton, QSizePolicy,
+                             QWidget, QSlider, QFrame, QLineEdit, QGridLayout)
 from PyQt5.QtCore import Qt, pyqtSignal, QRegExp
 from PyQt5.QtGui import QFont, QResizeEvent, QRegExpValidator
+from .helpers import get_float
 
 
 class CustomSlider(QSlider):
@@ -47,7 +49,7 @@ class CustomSlider(QSlider):
             self.setValue(width * self.abs_value)
 
 
-class AlternativeLayout(QFrame):
+class BaseAlternativeWidget(QFrame):
     text_changed = pyqtSignal(QFrame)
 
     def __init__(self, i):
@@ -61,20 +63,27 @@ class AlternativeLayout(QFrame):
         self.label.setFont(font)
 
         self.value_label = QLineEdit()
-        self.value_label.setValidator(QRegExpValidator(QRegExp(r'0[.|,][0-9]{1,4}|1[.|,]0{1,4}')))
+        self.value_label.setValidator(QRegExpValidator(QRegExp(r'(0([\.|,]\d{1,4})?|1([\.|,]0{1,4})?)')))
         self.value_label.setFont(font)
         self.value_label.setFixedWidth(110)
-        self.value_label.editingFinished.connect(lambda: self.text_changed.emit(self))
-
-        self.slider = CustomSlider(Qt.Horizontal)
-        self.slider.setFocusPolicy(Qt.NoFocus)
 
         self.layout.addWidget(self.label)
-        self.layout.addWidget(self.slider)
         self.layout.addWidget(self.value_label)
 
+        self.value_label.editingFinished.connect(lambda: self.text_changed.emit(self))
 
-class ManualRankingWindow(QWidget):
+
+class VisualAlternativeWidget(BaseAlternativeWidget):
+    def __init__(self, i):
+        super().__init__(i)
+        self.slider = CustomSlider(Qt.Horizontal)
+        self.slider.setFocusPolicy(Qt.NoFocus)
+        self.layout.insertWidget(self.layout.count() - 1, self.slider)
+
+
+class VisualRankingWindow(QWidget):
+    values_updated = pyqtSignal(QWidget)
+
     def __init__(self, size=10, window_title=None, max_alternatives=10):
         super().__init__()
         if window_title is not None:
@@ -136,9 +145,11 @@ class ManualRankingWindow(QWidget):
         for i, value in enumerate(normed_values):
             self.value_labels[i].setText(f'{value:.4f}')
 
+        self.values_updated.emit(self)
+
     def create_alternatives(self):
         for i in range(self.max_alternatives):
-            self.layout.addWidget(AlternativeLayout(i))
+            self.layout.addWidget(VisualAlternativeWidget(i))
 
     def update_size(self, size):
         self.size = size
@@ -149,3 +160,50 @@ class ManualRankingWindow(QWidget):
             self.layout.itemAt(i).widget().hide()
 
         self.update_values()
+
+
+class ManualRankingWindow(QWidget):
+    def __init__(self, size=10, window_title=None, max_alternatives=10):
+        super().__init__()
+        if window_title is not None:
+            self.setWindowTitle(window_title)
+
+        self.setFixedSize(0, 0)
+        self.size = size
+        self.max_alternatives = max_alternatives
+        self.alternatives = []
+        self.normed_values = np.ones(self.max_alternatives) / self.max_alternatives
+
+        self.layout = QVBoxLayout()
+        self.alternatives_layout = QGridLayout()
+        self.layout.addLayout(self.alternatives_layout)
+        self.setLayout(self.layout)
+        self.create_alternatives()
+
+        font = QFont()
+        font.setPointSize(14)
+        self.button = QPushButton("Update")
+        self.button.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
+        self.button.setFont(font)
+        self.layout.addWidget(self.button, alignment=Qt.AlignRight)
+
+    def create_alternatives(self):
+        for i in range(self.max_alternatives):
+            alternative = BaseAlternativeWidget(i)
+            alternative.text_changed.connect(self.update_normed)
+            self.alternatives.append(alternative)
+            self.alternatives_layout.addWidget(alternative, i // 5, i % 5)
+
+    def update_normed(self, alternative):
+        self.normed_values[alternative.i] = get_float(alternative.value_label.text())
+
+    def update_size(self, size):
+        self.size = size
+        for i in range(size):
+            self.alternatives_layout.itemAt(i).widget().show()
+
+        for i in range(size, self.max_alternatives):
+            self.alternatives_layout.itemAt(i).widget().hide()
+
+        self.adjustSize()
+        self.resize(0, 0)
